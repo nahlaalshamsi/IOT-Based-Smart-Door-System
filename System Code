@@ -1,0 +1,53 @@
+#include <Wire.h>
+#include <Adafruit_MLX90614.h>
+#include <Servo.h>
+
+Adafruit_MLX90614 mlx = Adafruit_MLX90614();
+Servo doorServo;
+
+const int buz = 13;
+const int greenLed = 7;
+const int redLed = 8;
+
+void setup() {
+  Serial.begin(9600);
+  mlx.begin();
+
+  pinMode(buz, OUTPUT);
+  pinMode(greenLed, OUTPUT);
+  pinMode(redLed, OUTPUT);
+
+  digitalWrite(buz, LOW);
+  digitalWrite(greenLed, LOW);
+  digitalWrite(redLed, LOW);
+
+  doorServo.attach(9);
+  doorServo.write(0);  // Close the door at the beginning
+}
+
+void loop() {
+  double personTemp = mlx.readObjectTempC();
+  Serial.print("Person Temperature: ");
+  Serial.print(personTemp);
+  Serial.println(" *C");
+
+  if (personTemp < 37.5) {  //open the door
+    doorServo.write(90);    // Rotate servo to 90 degrees to open and Keep it open for 5 seconds
+    digitalWrite(buz, HIGH);
+    digitalWrite(greenLed, HIGH);
+    digitalWrite(redLed, LOW);
+    delay(1000);
+    digitalWrite(buz, LOW);
+    delay(4000);
+    digitalWrite(greenLed, LOW);
+    doorServo.write(0);             // Close the door
+    delay(1000);                    // Ensure the servo reaches closed position before next check
+  } else if (personTemp >= 37.5) {  //door will not open
+    digitalWrite(buz, HIGH);
+    digitalWrite(greenLed, LOW);
+    digitalWrite(redLed, HIGH);
+    delay(5000);
+    digitalWrite(buz, LOW);
+    digitalWrite(redLed, LOW);
+  }
+}
